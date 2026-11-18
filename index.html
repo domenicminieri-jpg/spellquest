@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SpellQuest</title>
+<meta name="theme-color" content="#FFC93C">
+<meta name="description" content="Spelling practice that earns device time.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SpellQuest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+
+<style>
+@font-face{font-family:Nunito;font-style:normal;font-weight:700;font-display:swap;src:url(nunito-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:Nunito;font-style:normal;font-weight:800;font-display:swap;src:url(nunito-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:Nunito;font-style:normal;font-weight:900;font-display:swap;src:url(nunito-latin-900-normal.woff2) format('woff2')}
+
+:root{--bg:#FFF8EC;--ink:#1f1b3d;--mut:#6e6a8c;--line:#EADFCB;--yellow:#FFC93C;--orange:#FF8A1F;--blue:#2A5CFF;--green:#1FC58A;--red:#FF5D6C;--pink:#FF8FB1;--purple:#7A5CFF}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;font-family:Nunito,system-ui,-apple-system,Segoe UI,sans-serif;font-weight:700;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-tap-highlight-color:transparent}
+#app{max-width:780px;margin:0 auto;padding:16px 16px 70px;position:relative}
+h1,h2,h3{margin:0;font-weight:900}
+h1{font-size:1.7rem}h2{font-size:1.3rem}h3{font-size:1.1rem}
+p{margin:.4em 0}
+.mut{color:var(--mut)}.small{font-size:.88rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.sp{justify-content:space-between}
+.card{background:#fff;border-radius:28px;padding:20px;margin:14px 0;box-shadow:0 10px 28px rgba(120,80,0,.09),0 2px 0 rgba(0,0,0,.04)}
+.pulled{margin-top:-38px;position:relative;z-index:2}
+/* hero */
+.hero{--hc:#FFC93C;position:relative;margin:-16px -16px 0;padding:20px 16px 96px;background:var(--hc);text-align:center;box-shadow:0 0 0 100vmax var(--hc);clip-path:inset(0 -100vmax)}
+.hero:after{content:'';position:absolute;left:50%;bottom:-2px;width:220vw;height:84px;transform:translateX(-50%);background:var(--bg);border-radius:50% 50% 0 0/100% 100% 0 0}
+.hero.blue{--hc:#2A5CFF;color:#fff}
+.hero.orange{--hc:#FF9A3D}
+.hero.mini{padding:14px 16px 84px}
+.hero .hello{font-size:2rem;margin-top:4px;position:relative}
+.hero .sub{font-weight:800;opacity:.8;position:relative}
+.decor{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero>*{position:relative}.hero>.decor{position:absolute}
+/* buttons */
+.btn{font:inherit;font-weight:900;font-size:1.1rem;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;background:var(--blue);color:#fff;box-shadow:0 5px 0 #1a3fb8;min-height:52px;transition:transform .1s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.btn.gold{background:var(--yellow);color:var(--ink);box-shadow:0 5px 0 #d9a400}
+.btn.green{background:var(--green);color:#fff;box-shadow:0 5px 0 #0f8f62}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 5px 0 #c73a49}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:0 3px 0 var(--line)}
+.btn.big{font-size:1.3rem;padding:16px 26px;width:100%}
+.btn.sm{font-size:.9rem;padding:8px 14px;min-height:40px;box-shadow:0 3px 0 var(--line)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.chip{background:rgba(255,255,255,.9);color:var(--ink);border-radius:99px;padding:7px 14px;font-weight:900;font-size:.92rem}
+.chip.gold{background:#fff}
+/* inputs */
+input[type=text],input[type=password],input[type=number],textarea,select{font:inherit;font-weight:800;background:#fff;color:var(--ink);border:3px solid var(--line);border-radius:20px;padding:13px 16px;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+label{display:block;font-weight:800;margin:12px 0 4px}
+textarea{min-height:140px;font-weight:600;font-size:.95rem}
+/* bars */
+.bar{height:14px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--ac,var(--green));border-radius:99px;transition:width .4s}
+.hero .bar{background:rgba(0,0,0,.14)}.hero .bar>i{background:#fff}
+.bar.gold>i{background:linear-gradient(90deg,#FFC93C,#FF8A1F)}
+/* home */
+.balance{text-align:center}
+.balance .num{font-size:4.4rem;line-height:1;font-weight:900;color:var(--orange)}
+.balance .num span{font-size:1.4rem;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.lvl{background:var(--lc);border:0;border-radius:28px;padding:16px;text-align:left;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;position:relative;box-shadow:0 6px 0 rgba(0,0,0,.08);animation:pop .5s both;transition:transform .15s}
+.lvl:hover{transform:translateY(-3px) rotate(-1deg)}
+.lvl:active{transform:translateY(3px)}
+.lvl .em{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:1.9rem;box-shadow:0 4px 0 rgba(0,0,0,.08);margin-bottom:8px}
+.lvl .bar{background:rgba(255,255,255,.7)}
+.tag{position:absolute;top:12px;right:12px;background:var(--ink);color:#fff;font-weight:900;font-size:.72rem;border-radius:99px;padding:4px 10px;animation:wiggle 1.6s infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+/* round */
+.mrow{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.say{background:#FFF1CF;border-radius:20px;padding:12px 16px;position:relative;font-weight:900;flex:1}
+.say:before{content:'';position:absolute;left:-9px;top:50%;margin-top:-9px;border:9px solid transparent;border-left:0;border-right-color:#FFF1CF}
+.sent{font-size:1.4rem;line-height:1.55;text-align:center;margin:12px 0 16px}
+.blank{display:inline-block;border-bottom:5px solid var(--orange);border-radius:3px;height:1.1em;vertical-align:-2px;margin:0 4px}
+.fill{color:var(--green)}
+#ans,#fix{font-size:1.9rem;text-align:center;letter-spacing:2px;border-radius:99px}
+.opt{display:block;width:100%;font:inherit;font-weight:900;font-size:1.6rem;background:#fff;color:var(--ink);border:3px solid var(--line);border-radius:99px;padding:15px;margin:12px 0;cursor:pointer;box-shadow:0 4px 0 var(--line);transition:transform .1s}
+.opt:active{transform:translateY(3px)}
+.opt.good{background:#CFF5E4;border-color:var(--green)}.opt.bad{background:#FFD9DE;border-color:var(--red)}
+.fb{border-radius:24px;padding:16px;margin-top:14px;text-align:center}
+.fb.good{background:#DDF8EC;color:#0b5c3f}.fb.bad{background:#FFE3E6;color:#8a2331}
+.big-word{font-size:2.3rem;font-weight:900;letter-spacing:3px}
+.big-word .ok{color:var(--green)}.big-word .bad{color:var(--red)}
+.pop{animation:pop .45s}
+@keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+/* mascot */
+.mas{display:block;margin:0 auto;animation:bob 3.2s ease-in-out infinite;transform-origin:50% 100%;overflow:visible}
+.mas-cheer{animation:hop .5s ease-in-out 4}
+.mas-oops{animation:shake .5s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-18px) scale(.97,1.04)}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:80}
+.confetti i{position:absolute;top:-24px;width:10px;height:15px;border-radius:3px;animation:fall 2.4s linear forwards}
+@keyframes fall{to{transform:translateY(108vh) rotate(720deg)}}
+/* summary + timer */
+.bignum{font-size:4.2rem;font-weight:900;color:var(--orange);line-height:1}
+.bignum span{font-size:1.8rem;color:var(--mut)}
+.earn{font-size:1.4rem;font-weight:900}
+.timer{font-size:5.8rem;font-weight:900;text-align:center;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1}
+.timer.low{color:var(--yellow);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.55}}
+/* modal, parent */
+.modal{position:fixed;inset:0;background:rgba(31,27,61,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:70}
+.modal .card{max-width:420px;width:100%}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tab{font:inherit;font-weight:900;border:2px solid var(--line);border-radius:99px;padding:9px 16px;background:#fff;color:var(--mut);cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+td,th{padding:6px 4px;text-align:left;border-bottom:1px solid var(--line)}
+.days{display:flex;gap:6px;align-items:flex-end;height:110px}
+.days div{flex:1;text-align:center;font-size:.75rem}
+.days i{display:block;background:var(--green);border-radius:8px 8px 0 0;min-height:3px}
+.warn{background:#FFF0C2;border-radius:16px;padding:10px 14px;margin:10px 0;font-size:.9rem}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.tile{background:#FFF1CF;border-radius:20px;padding:12px;text-align:center}
+.tile b{display:block;font-size:1.6rem;color:var(--orange)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+
+/* ---------- WORD BANK (Australian spelling) ---------- */
+const LEVELS=[
+{id:'l0',name:'Starter',sub:'Year 3',em:'🌱',raw:`
+because|I stayed inside because it was raining.
+friend|My best friend lives next door.
+again|Please read the story again.
+people|Lots of people came to the party.
+would|I would like a drink of water.
+could|She could see the moon from her window.
+water|Drink some water after you run.
+where|Where did you leave your shoes?
+their|The kids put on their hats.
+pretty|That is a pretty pink flower.
+always|He always brushes his teeth at night.
+whole|I ate the whole apple.
+after|We go to the park after lunch.
+many|There are many stars in the sky.
+only|I have only one pencil left.
+together|We played together all day.
+morning|The birds sing in the morning.
+someone|Someone knocked on the door.
+laugh|The funny clown made us laugh.
+bought|Mum bought fresh bread at the shops.
+enough|Do we have enough chairs?
+caught|The dog caught the ball.
+every|Every child got a turn.
+little|A little bird sat on the fence.
+thought|I thought it was Tuesday.
+`},
+{id:'l1',name:'Explorer',sub:'Year 4',em:'🧭',raw:`
+colour|Blue is my favourite colour.
+favourite|What is your favourite food?
+neighbour|Our neighbour has a friendly dog.
+centre|We met in the centre of town.
+theatre|The play is on at the theatre.
+grey|Dark grey clouds filled the sky.
+travelled|We travelled to Perth by plane.
+jewellery|She keeps her jewellery in a small box.
+beautiful|The garden looks beautiful in spring.
+through|We walked through the tunnel.
+different|Every snowflake is different.
+answer|Do you know the answer?
+mountain|They climbed the tallest mountain.
+journey|The journey took three hours.
+library|I borrowed a book from the library.
+February|February is the shortest month.
+Wednesday|Swimming is on Wednesday.
+special|Today is a special day.
+surprise|The party was a big surprise.
+weather|The weather is sunny and warm.
+minute|Wait one minute, please.
+building|The building has twelve floors.
+believe|I believe you are right.
+century|A century is one hundred years.
+certain|I am certain I locked the door.
+continue|Please continue reading the page.
+famous|She is a famous singer.
+history|We learnt about history today.
+natural|The cave is a natural wonder.
+ordinary|It was an ordinary Tuesday.
+perhaps|Perhaps we can swim after school.
+popular|Pizza is a popular lunch.
+promise|I promise to be home by five.
+quarter|I ate a quarter of the cake.
+remember|Remember to pack your hat.
+sentence|Write one sentence about your pet.
+strength|The weightlifter has great strength.
+weight|Check the weight of the parcel.
+breathe|Breathe in slowly through your nose.
+`},
+{id:'l2',name:'Adventurer',sub:'Year 5',em:'⛰️',raw:`
+adventure|The map led us on a big adventure.
+ancient|They explored an ancient temple.
+audience|The audience clapped loudly.
+average|The average height of the class is 140 centimetres.
+bargain|That jumper was a bargain.
+boundary|The ball crossed the boundary.
+brilliant|What a brilliant idea!
+character|My favourite character is the brave knight.
+community|Our community holds a fair every year.
+competition|She won the swimming competition.
+courage|It takes courage to speak up.
+decision|We made a decision together.
+describe|Can you describe the creature?
+disappear|The magician made the coin disappear.
+discover|Scientists discover new animals each year.
+distance|The distance to school is two kilometres.
+exercise|Exercise keeps your body strong.
+experience|Camp was a great experience.
+familiar|That song sounds familiar.
+festival|We went to the music festival.
+foreign|She speaks a foreign language.
+freedom|Birds have the freedom to fly.
+gradually|The sky gradually grew dark.
+imagine|Imagine you can fly.
+instrument|He plays an instrument in the band.
+language|French is a beautiful language.
+opposite|Hot is the opposite of cold.
+neighbourhood|Our neighbourhood has a lovely park.
+honour|It is an honour to meet you.
+`},
+{id:'l3',name:'Champion',sub:'Year 6',em:'🏆',raw:`
+separate|Please keep the colours separate.
+definitely|I will definitely be there.
+necessary|Water is necessary for life.
+argument|They had an argument about the game.
+business|His family runs a small business.
+calendar|Mark the date on the calendar.
+comfortable|This chair is very comfortable.
+environment|We must protect the environment.
+government|The government makes the laws.
+interesting|That was an interesting story.
+knowledge|Reading builds your knowledge.
+length|Measure the length of the table.
+material|The material is soft and warm.
+medicine|Take your medicine after dinner.
+occasion|A birthday is a happy occasion.
+particular|Is there a particular song you like?
+practise|You must practise every day.
+queue|We joined the queue for the ride.
+receive|I hope to receive a letter soon.
+restaurant|We ate at a fancy restaurant.
+temperature|The temperature dropped overnight.
+vegetable|Broccoli is my favourite vegetable.
+width|Check the width of the door.
+behaviour|His behaviour was excellent.
+`},
+{id:'l4',name:'Legend',sub:'Years 7 and up',em:'👑',raw:`
+accommodate|The hotel can accommodate fifty guests.
+acquire|You can acquire new skills with practice.
+conscience|His conscience told him to tell the truth.
+convenience|Online shopping is a great convenience.
+embarrass|Please do not embarrass me in front of everyone.
+exaggerate|Do not exaggerate the story.
+guarantee|The shop will guarantee the repair.
+humorous|It was a humorous speech.
+immediately|Come here immediately.
+independent|He is a very independent thinker.
+mischievous|The mischievous puppy chewed my shoe.
+parliament|Parliament meets in Canberra.
+persuade|I will try to persuade Dad to say yes.
+privilege|It is a privilege to be here.
+pronunciation|Check the pronunciation in the dictionary.
+recommend|I recommend the pasta.
+rhythm|The drummer kept a steady rhythm.
+sacrifice|They made a sacrifice for the team.
+secretary|The secretary answered the phone.
+sincerely|She thanked us sincerely.
+yacht|A yacht sailed across the harbour.
+negotiate|They will negotiate a fair price.
+ridiculous|That hat looks ridiculous.
+unnecessary|It is unnecessary to shout.
+desperate|The hikers were desperate for water.
+dilemma|I faced a real dilemma.
+camouflage|The lizard used camouflage to hide.
+maintenance|The bridge needs regular maintenance.
+miniature|She collects miniature trains.
+silhouette|We saw a silhouette against the window.
+`}
+];
+const BASE=[];
+LEVELS.forEach(L=>L.raw.trim().split('\n').forEach(line=>{const i=line.indexOf('|');if(i>0)BASE.push({w:line.slice(0,i).trim(),s:line.slice(i+1).trim(),lvl:L.id})}));
+
+/* ---------- STATE ---------- */
+const KEY='spellquest.v1';
+let storageOK=true;
+function def(){return{v:1,setup:false,name:'',pin:'',cfg:{startLvl:'l1',ppm:20,capMin:60,roundLen:20,minClaim:5,approve:false,sfx:true},pts:0,words:{},ledger:[],day:{date:'',earned:0,credited:{}},streak:0,lastActive:'',claim:null,custom:'',rounds:[],snap:{}}}
+function load(){
+  try{
+    localStorage.setItem(KEY+'.t','1');localStorage.removeItem(KEY+'.t');
+    const t=localStorage.getItem(KEY);
+    if(t){const o=JSON.parse(t);const d=def();return Object.assign(d,o,{cfg:Object.assign(d.cfg,o.cfg||{})})}
+  }catch(e){storageOK=false}
+  return def();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){storageOK=false}}
+let S=load();
+
+const dstr=d=>{d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function rollDay(){if(S.day.date!==dstr())S.day={date:dstr(),earned:0,used:0,credited:{}}}
+function touchStreak(){
+  const t=dstr();if(S.lastActive===t)return;
+  S.streak=(S.lastActive===dstr(new Date(Date.now()-864e5)))?S.streak+1:1;S.lastActive=t;
+}
+function streakNow(){const t=dstr();return(S.lastActive===t||S.lastActive===dstr(new Date(Date.now()-864e5)))?S.streak:0}
+function log(k,pts,note){const e={t:Date.now(),k:k,pts:pts,note:note};S.ledger.push(e);if(S.ledger.length>400)S.ledger.splice(0,S.ledger.length-400);return e}
+const minsOf=p=>Math.floor(p/S.cfg.ppm);
+const capPts=()=>S.cfg.capMin*S.cfg.ppm;
+function usable(){rollDay();return Math.max(0,Math.min(minsOf(S.pts),S.cfg.capMin-(S.day.used||0)))}
+
+function parseCustom(txt){
+  const out=[];
+  String(txt||'').split('\n').forEach(line=>{
+    line=line.trim();if(!line)return;
+    const m=line.match(/^([A-Za-z'\-]+)\s*[,|]?\s*(.*)$/);
+    if(m)out.push({w:m[1],s:(m[2]||'').trim(),lvl:'custom'});
+  });
+  return out;
+}
+const allWords=()=>BASE.concat(parseCustom(S.custom));
+const wkey=w=>w.toLowerCase();
+const stat=w=>S.words[wkey(w)]||{box:0,right:0,wrong:0,seen:0,last:0};
+function levelStats(id){const ws=allWords().filter(w=>w.lvl===id);return{total:ws.length,m:ws.filter(w=>stat(w.w).box>=3).length}}
+function recommended(){const st=Math.max(0,LEVELS.findIndex(l=>l.id===S.cfg.startLvl));for(let i=st;i<LEVELS.length;i++){const s=levelStats(LEVELS[i].id);if(s.m/s.total<.8)return LEVELS[i].id}return 'l4'}
+
+/* ---------- HELPERS ---------- */
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=n=>Math.floor(Math.random()*n);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+const fmtT=t=>new Date(t).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+function blankSent(s,w,fill){
+  if(!s)return null;
+  const re=new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
+  const m=re.exec(s);if(!m)return null;
+  const mid=fill?'<b class="fill">'+esc(m[0])+'</b>':'<span class="blank" style="width:'+Math.max(3,w.length*.62)+'em"></span>';
+  return esc(s.slice(0,m.index))+mid+esc(s.slice(m.index+m[0].length));
+}
+function diffHtml(right,typed){
+  let h='';for(let i=0;i<right.length;i++){const ok=typed[i]&&typed[i].toLowerCase()===right[i].toLowerCase();h+='<span class="'+(ok?'ok':'bad')+'">'+esc(right[i])+'</span>'}return h;
+}
+
+/* ---------- SOUND + SPEECH ---------- */
+let ac;
+function tone(f,d,delay){
+  if(!S.cfg.sfx)return;
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+(delay||0);
+    o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,s);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g);g.connect(ac.destination);o.start(s);o.stop(s+d)}catch(e){}
+}
+const sfx={good(){tone(660,.15);tone(880,.25,.12)},bad(){tone(220,.35)},cheer(){[523,659,784,1047].forEach((f,i)=>tone(f,.2,i*.12))}};
+const hasSpeech=()=>{try{return'speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined'}catch(e){return false}};
+function pickVoice(){
+  try{const v=speechSynthesis.getVoices();return v.find(x=>/en[-_]AU/i.test(x.lang))||v.find(x=>/en[-_]GB/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){return null}
+}
+function speak(text,rate){
+  if(!hasSpeech())return;
+  try{const u=new SpeechSynthesisUtterance(text);const v=pickVoice();if(v){u.voice=v;u.lang=v.lang}else u.lang='en-AU';u.rate=rate||.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+try{if(hasSpeech())speechSynthesis.onvoiceschanged=function(){}}catch(e){}
+
+/* ---------- MISSPELLINGS FOR "FIX IT" ---------- */
+function misspell(word){
+  const cap=word[0]!==word[0].toLowerCase();const w=word.toLowerCase();const out=new Set();
+  const add=x=>{if(x&&x!==w&&x.length>2)out.add(x)};
+  [[/our/,'or'],[/tre$/,'ter'],[/lled$/,'led'],[/grey/,'gray'],[/ellery$/,'elry'],[/ise$/,'ice'],[/ize$/,'ise']].forEach(r=>{if(r[0].test(w))add(w.replace(r[0],r[1]))});
+  const sw=i=>{const a=w.split('');const t=a[i];a[i]=a[i+1];a[i+1]=t;return a.join('')};
+  if(/(.)\1/.test(w))add(w.replace(/(.)\1/,'$1'));
+  else{const idx=[];for(let i=2;i<w.length-1;i++)if(!'aeiou'.includes(w[i]))idx.push(i);if(idx.length){const i=idx[rnd(idx.length)];add(w.slice(0,i)+w[i]+w.slice(i))}}
+  const vi=[];for(let i=1;i<w.length;i++)if('aeiou'.includes(w[i]))vi.push(i);
+  if(vi.length){const i=vi[rnd(vi.length)];const alt='aeiou'.replace(w[i],'');add(w.slice(0,i)+alt[rnd(alt.length)]+w.slice(i+1))}
+  if(w.includes('ie'))add(w.replace('ie','ei'));else if(w.includes('ei'))add(w.replace('ei','ie'));
+  let tries=0;
+  while(out.size<4&&tries++<30&&w.length>3){const r=rnd(3);if(r===0)add(sw(1+rnd(w.length-3)));else if(r===1){const i=1+rnd(w.length-2);add(w.slice(0,i)+w.slice(i+1))}else{const i=1+rnd(w.length-2);add(w.slice(0,i)+w[i]+w.slice(i))}}
+  const arr=shuffle([...out]).slice(0,2);
+  return arr.map(x=>cap?x[0].toUpperCase()+x.slice(1):x);
+}
+
+/* ---------- AWARDING ---------- */
+function award(p){
+  rollDay();const room=Math.max(0,capPts()-S.day.earned);const give=Math.min(p,room);
+  if(give>0){S.day.earned+=give;S.pts+=give;touchStreak()}
+  return give;
+}
+
+/* ---------- FUN BITS ---------- */
+const LCOL={l0:['#D9F6E8','#1FC58A'],l1:['#D9EBFF','#2A8CFF'],l2:['#E7DFFF','#7A5CFF'],l3:['#FFE2D0','#FF7A3D'],l4:['#FFF0B3','#E8A200'],custom:['#FFDCE8','#FF5C93']};
+const GOOD=['Nailed it!','Spelling superstar!','Yes! Brilliant!','You legend!','Boom! Correct!','So good!','Look at you go!'];
+const BAD=['Good try! Check the letters.','So close! Let us fix it.','Tricky one! You will get it.','Oops! It will stick next time.'];
+const ASK=['Listen closely, then spell it!','Ears on! What is the word?','Can you spell this one?','Give it a go!'];
+const pickOne=a=>a[rnd(a.length)];
+function mascot(mood,size){
+  size=size||110;const ink='#1f1b3d';
+  const eye=(px,py)=>'<circle cx="45" cy="56" r="11" fill="#fff"/><circle cx="75" cy="56" r="11" fill="#fff"/><circle cx="'+(45+px)+'" cy="'+(56+py)+'" r="5.5" fill="'+ink+'"/><circle cx="'+(75+px)+'" cy="'+(56+py)+'" r="5.5" fill="'+ink+'"/>';
+  let eyes,mouth,arms='<ellipse cx="10" cy="78" rx="9" ry="12" fill="#1AA99B"/><ellipse cx="110" cy="78" rx="9" ry="12" fill="#1AA99B"/>';
+  if(mood==='cheer'){
+    eyes='<path d="M34 58 Q45 44 56 58" stroke="'+ink+'" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M64 58 Q75 44 86 58" stroke="'+ink+'" stroke-width="5.5" fill="none" stroke-linecap="round"/>';
+    mouth='<path d="M42 70 Q60 100 78 70 Z" fill="'+ink+'"/><path d="M51 82 Q60 91 69 82 Q60 77 51 82Z" fill="#FF7A8A"/>';
+    arms='<ellipse cx="8" cy="48" rx="9" ry="13" fill="#1AA99B" transform="rotate(-25 8 48)"/><ellipse cx="112" cy="48" rx="9" ry="13" fill="#1AA99B" transform="rotate(25 112 48)"/>';
+  }else if(mood==='oops'){
+    eyes=eye(0,3)+'<path d="M34 46 L54 40 M86 46 L66 40" stroke="'+ink+'" stroke-width="4.5" stroke-linecap="round"/>';
+    mouth='<path d="M46 84 Q60 72 74 84" stroke="'+ink+'" stroke-width="5" fill="none" stroke-linecap="round"/>';
+  }else if(mood==='think'){
+    eyes=eye(3,-3);mouth='<ellipse cx="60" cy="80" rx="7" ry="5" fill="'+ink+'"/>';
+  }else{
+    eyes=eye(0,1);mouth='<path d="M44 74 Q60 90 76 74" stroke="'+ink+'" stroke-width="5" fill="none" stroke-linecap="round"/>';
+  }
+  return '<svg class="mas mas-'+mood+'" width="'+size+'" height="'+Math.round(size*138/120)+'" viewBox="0 -18 120 138" aria-hidden="true">'+
+  '<g transform="rotate(-16 60 18)"><rect x="52" y="-14" width="16" height="32" rx="3" fill="#FFC93C"/><rect x="52" y="-14" width="16" height="8" rx="3" fill="#FF8FB1"/></g>'+
+  arms+'<ellipse cx="40" cy="108" rx="15" ry="9" fill="#1AA99B"/><ellipse cx="80" cy="108" rx="15" ry="9" fill="#1AA99B"/>'+
+  '<path d="M60 14 C92 14 108 40 108 68 C108 96 88 108 60 108 C32 108 12 96 12 68 C12 40 28 14 60 14Z" fill="#2EC4B6"/>'+
+  '<ellipse cx="42" cy="34" rx="16" ry="8" fill="#fff" opacity=".28" transform="rotate(-25 42 34)"/>'+
+  '<circle cx="28" cy="74" r="7" fill="#FF8FB1" opacity=".65"/><circle cx="92" cy="74" r="7" fill="#FF8FB1" opacity=".65"/>'+eyes+mouth+'</svg>';
+}
+function setMas(mood,msg){const m=$('#mas'),s=$('#say');if(m)m.innerHTML=mascot(mood,84);if(s)s.textContent=msg}
+function decor(){return '<svg class="decor" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M60 40 l8 18 18 8 -18 8 -8 18 -8 -18 -18 -8 18 -8z" fill="#FF8FB1"/><circle cx="352" cy="52" r="22" fill="#fff" opacity=".35"/><circle cx="326" cy="76" r="13" fill="#fff" opacity=".35"/><path d="M322 132 l6 13 13 6 -13 6 -6 13 -6 -13 -13 -6 13 -6z" fill="#fff" opacity=".75"/><circle cx="44" cy="146" r="10" fill="#2A5CFF" opacity=".6"/><circle cx="96" cy="112" r="5" fill="#fff" opacity=".7"/></svg>'}
+function confetti(n){
+  if(!n)return;
+  try{const c=document.createElement('div');c.className='confetti';const cols=['#FFC93C','#FF8FB1','#2A5CFF','#1FC58A','#7A5CFF','#FF8A1F'];
+    for(let i=0;i<n;i++){const s=document.createElement('i');s.style.left=Math.random()*100+'%';s.style.background=cols[i%cols.length];s.style.animationDelay=(Math.random()*.7)+'s';s.style.animationDuration=(1.8+Math.random()*1.4)+'s';s.style.transform='rotate('+rnd(360)+'deg)';c.appendChild(s)}
+    document.body.appendChild(c);setTimeout(()=>c.remove(),3800)}catch(e){}
+}
+
+/* ---------- ROUND ---------- */
+let R=null,view='home',P={tab:'reports',range:7,ext:null},tickId=null;
+
+function pickWords(id,n){
+  rollDay();
+  let pool=allWords().filter(w=>w.lvl===id);
+  const wt=[3,5,3,2,1,.5];
+  const items=pool.map(w=>{const s=stat(w.w);let x=s.seen?wt[Math.min(5,s.box+1)]:wt[0];if(S.day.credited[wkey(w.w)])x*=.2;return{w:w,x:x}});
+  const out=[];n=Math.min(n,items.length);
+  while(out.length<n){
+    const tot=items.reduce((a,b)=>a+b.x,0);let r=Math.random()*tot,i=0;
+    for(;i<items.length-1;i++){r-=items[i].x;if(r<=0)break}
+    out.push(items[i].w);items.splice(i,1);
+  }
+  return out;
+}
+function startRound(id){
+  rollDay();
+  const ws=pickWords(id,S.cfg.roundLen);
+  if(!ws.length){go('home');return}
+  const name=id==='custom'?'My List':LEVELS.find(l=>l.id===id).name;
+  R={t0:Date.now(),tried:0,id:id,name:name,queue:ws.map(w=>Object.assign({},w)),i:0,run:0,earned:0,first:0,total:ws.length,hint:false,phase:'ask',missed:[],entry:log('earn',0,'Round: '+name)};
+  view='round';question();
+}
+const cur=()=>R.queue[R.i];
+
+function topbar(){
+  const done=Math.min(R.i,R.queue.length);
+  return '<div class="hero mini"><div class="row sp"><button class="btn ghost sm" data-act="quit">✕ Quit</button><span class="chip">Word '+Math.min(R.i+1,R.queue.length)+' of '+R.queue.length+'</span><span class="chip gold">⭐ '+R.earned+'</span></div><div class="bar" style="margin-top:14px"><i style="width:'+Math.round(done/R.queue.length*100)+'%"></i></div></div>';
+}
+function capNote(){rollDay();return S.day.earned>=capPts()?'<div class="warn">You have hit today\'s device time limit. Keep practising to master words. More credit tomorrow!</div>':''}
+
+function question(){
+  const q=cur();R.hint=false;R.phase='ask';
+  q.mode=q.retry?'spell':(Math.random()<.3?'fix':'spell');
+  const sb=blankSent(q.s,q.w,false);
+  let h=topbar()+'<div class="card pulled pop">'+capNote()+'<div class="mrow"><div id="mas">'+mascot('happy',84)+'</div><div class="say" id="say">'+(q.mode==='spell'?pickOne(ASK):'Which one looks right?')+'</div></div>';
+  if(q.mode==='spell'){
+    h+=(sb?'<div class="sent">'+sb+'</div>':'')+
+    '<div class="row" style="justify-content:center"><button class="btn gold" data-act="sayw">🔊 Word</button>'+(q.s?'<button class="btn" data-act="says">💬 Sentence</button>':'')+'<button class="btn ghost" data-act="sayslow">🐢 Slowly</button></div>'+
+    (hasSpeech()?'':'<div class="warn">No voice on this device, so a hint is shown.</div>')+
+    '<div style="margin:16px 0"><input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type the word"></div>'+
+    '<div id="hintbox" class="mut" style="text-align:center;min-height:24px;font-weight:900;letter-spacing:3px"></div>'+
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" data-act="hint">💡 Hint</button><button class="btn green" data-act="check">Check ✓</button></div>';
+  }else{
+    const opts=shuffle([q.w].concat(misspell(q.w)));
+    h+=(sb?'<div class="sent">'+sb+'</div>':'')+
+    '<div class="row" style="justify-content:center"><button class="btn gold" data-act="sayw">🔊 Word</button></div>'+
+    '<div style="margin-top:10px">'+opts.map(o=>'<button class="opt" data-act="pick" data-v="'+esc(o)+'">'+esc(o)+'</button>').join('')+'</div>';
+  }
+  h+='<div id="fb"></div></div>';
+  app.innerHTML=h;
+  if(q.mode==='spell'){const a=$('#ans');if(a)a.focus();if(!hasSpeech())showHint()}
+  setTimeout(()=>speak(q.w),250);
+}
+function showHint(){const q=cur();const b=$('#hintbox');if(b)b.textContent=q.w[0].toUpperCase()+' '+'_ '.repeat(q.w.length-1).trim()+'   ('+q.w.length+' letters)'}
+
+function resolve(ok,typed){
+  const q=cur();let gained=0,bonusMsg='',note='';
+  if(!q.retry){
+    const k=wkey(q.w);const st=S.words[k]||(S.words[k]={box:0,right:0,wrong:0,seen:0,last:0});
+    st.seen++;st.last=Date.now();R.tried++;
+    if(ok){
+      st.right++;if(!R.hint)st.box=Math.min(4,st.box+1);R.first++;R.run++;
+      let p=q.mode==='spell'?10:5;if(R.hint)p=Math.floor(p/2);
+      rollDay();
+      if(S.day.credited[k]){p=0;note='Already earned for this word today.'}else S.day.credited[k]=1;
+      if(R.run%5===0){p+=10;bonusMsg=' 🔥 Streak bonus +10!'}
+      gained=award(p);
+      if(p>0&&gained<p)note='Daily limit reached.';
+    }else{
+      st.wrong++;st.box=0;R.run=0;R.missed.push(q.w);R.queue.push(Object.assign({},q,{retry:true}));
+    }
+    R.earned+=gained;R.entry.pts=R.earned;
+    if(q.mode==='fix'||ok)R.phase='done';
+  }else{R.phase='done'}
+  save();
+  const fb=$('#fb');
+  if(ok){
+    sfx.good();setMas('cheer',pickOne(GOOD));confetti(bonusMsg?80:16);
+    fb.innerHTML='<div class="fb good pop"><div style="font-size:1.6rem;font-weight:900">✅ '+(q.retry?'Got it!':'Correct!')+(gained?' ⭐ +'+gained:'')+bonusMsg+'</div>'+(blankSent(q.s,q.w,true)?'<p>'+blankSent(q.s,q.w,true)+'</p>':'')+(note?'<p class="small">'+note+'</p>':'')+
+      (typed&&typed!==q.w&&q.w[0]!==q.w[0].toLowerCase()&&typed[0]===typed[0].toLowerCase()?'<p class="small">Remember the capital letter: <b>'+esc(q.w)+'</b></p>':'')+
+      '</div><button class="btn big" style="margin-top:12px" data-act="next">Next ➜</button>';
+  }else if(q.mode==='spell'&&!q.retry){
+    sfx.bad();R.phase='copy';setMas('oops',pickOne(BAD));
+    fb.innerHTML='<div class="fb bad"><div>Not quite. Here is the right spelling:</div><div class="big-word">'+diffHtml(q.w,typed)+'</div><p class="small">Type it correctly to lock it in. This word will come back again.</p>'+
+      '<input id="fix" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type it again"></div>'+
+      '<button class="btn big" style="margin-top:12px" data-act="fixcheck">Lock it in</button>';
+    const a=$('#ans');if(a)a.disabled=true;const f=$('#fix');if(f)f.focus();
+    speak(q.w);
+  }else{
+    sfx.bad();setMas('oops',pickOne(BAD));
+    fb.innerHTML='<div class="fb bad"><div>Not quite. The right spelling is</div><div class="big-word">'+esc(q.w)+'</div><p class="small">This word will come back again.</p></div><button class="btn big" style="margin-top:12px" data-act="next">Next ➜</button>';
+    speak(q.w);
+  }
+  const chip=document.querySelector('.chip.gold');if(chip)chip.textContent='⭐ '+R.earned;
+  const nb=document.querySelector('[data-act=next]');if(nb)nb.focus();
+}
+function next(){
+  R.i++;
+  if(R.i>=R.queue.length){finish();return}
+  question();
+}
+function finish(){
+  let bonus=0;
+  if(R.first===R.total&&R.total>=5){bonus=award(20);R.earned+=bonus;R.entry.pts=R.earned}
+  R.bonus=bonus;logRound(true);
+  if(R.entry.pts<=0){const i=S.ledger.indexOf(R.entry);if(i>=0)S.ledger.splice(i,1)}
+  save();sfx.cheer();view='summary';render();
+}
+
+/* ---------- RENDER ---------- */
+function banner(){return storageOK?'':'<div class="warn">⚠️ This browser is not saving progress. Open the game as a saved file or in a normal (not private) tab so credit is kept.</div>'}
+
+function render(){
+  clearInterval(tickId);tickId=null;
+  if(!S.setup){return renderSetup()}
+  if(S.claim&&view!=='parent')view='timer';
+  ({home:renderHome,round:()=>{},summary:renderSummary,claim:renderClaim,timer:renderTimer,timesup:renderTimesUp,parent:renderParent})[view]();
+}
+function go(v){view=v;render()}
+
+function renderSetup(){
+  app.innerHTML='<div class="hero">'+decor()+mascot('cheer',120)+'<h1 class="hello">Welcome to SpellQuest!</h1><div class="sub">Spell words. Earn device time.</div></div>'+
+  '<div class="card pulled">'+banner()+'<p class="mut">Parent setup. It takes one minute.</p>'+
+  '<label>Player name</label><input id="s_name" type="text" placeholder="e.g. Alex" autocomplete="off">'+
+  '<label>Parent PIN (4 to 8 digits)</label><input id="s_pin" type="password" inputmode="numeric" placeholder="Used for the parent area" autocomplete="off">'+
+  '<p class="small mut">Defaults: 20 points = 1 minute, up to 60 minutes of device time per day. You can change these in the parent area.</p>'+
+  '<button class="btn big" data-act="setup" style="margin-top:12px">Let\'s go!</button><div id="err" class="small" style="color:var(--red);margin-top:8px"></div></div>';
+}
+function renderHome(){
+  rollDay();const mins=minsOf(S.pts),rem=S.cfg.ppm-(S.pts%S.cfg.ppm),cap=capPts();
+  const rec=recommended();const sn=streakNow();const avail=usable();
+  const hi=['Ready to spell?','Let us earn some time!','Words are waiting!','Time to level up!'][new Date().getDate()%4];
+  let h='<div class="hero">'+decor()+'<div class="row sp"><span class="chip">🔥 '+sn+' day streak</span><button class="btn ghost sm" data-act="parent">🔒 Parent</button></div>'+mascot('happy',118)+'<h1 class="hello">Hi '+esc(S.name||'there')+'!</h1><div class="sub">'+hi+'</div></div>';
+  h+='<div class="card balance pulled">'+banner()+'<div class="mut">Device time earned</div><div class="num">'+mins+'<span> min</span></div>'+
+    '<div class="small mut">'+(mins>0?'':'Next minute in '+rem+' points. ')+'Today: '+Math.floor(S.day.earned/S.cfg.ppm)+' of '+S.cfg.capMin+' min possible</div>'+
+    '<div class="bar gold" style="margin:12px 0"><i style="width:'+Math.min(100,Math.round(S.day.earned/cap*100))+'%"></i></div>'+
+    '<div class="row" style="justify-content:center"><span class="chip" style="background:#FFF1CF">⭐ '+(S.pts%S.cfg.ppm)+'/'+S.cfg.ppm+' pts to next min</span></div>'+
+    '<button class="btn big" style="margin-top:14px" data-act="claim" '+(avail<S.cfg.minClaim?'disabled':'')+'>⏱️ Use my device time</button>'+
+    (avail<S.cfg.minClaim?'<div class="small mut" style="margin-top:8px">'+(mins>=S.cfg.minClaim?'You have used today\'s device time limit. Back tomorrow!':'You need at least '+S.cfg.minClaim+' minutes to cash in.')+'</div>':'')+'</div>';
+  h+='<h2 style="margin:22px 0 10px">Pick a quest</h2><div class="grid">';
+  const card=(id,em,name,sub,s,i)=>{const c=LCOL[id];return '<button class="lvl" style="--lc:'+c[0]+';--ac:'+c[1]+';animation-delay:'+(i*70)+'ms" data-act="start" data-id="'+id+'">'+(id===rec?'<span class="tag">TRY THIS ✨</span>':'')+'<div class="em">'+em+'</div><h3>'+name+'</h3><div class="small">'+sub+'</div><div class="bar" style="margin:10px 0 4px"><i style="width:'+Math.round(s.m/s.total*100)+'%"></i></div><div class="small">'+s.m+' of '+s.total+' mastered</div></button>'};
+  LEVELS.forEach((L,i)=>{h+=card(L.id,L.em,L.name,L.sub,levelStats(L.id),i)});
+  const cs=levelStats('custom');
+  if(cs.total)h+=card('custom','📝','My List','Words set by your parent',cs,LEVELS.length);
+  h+='</div><p class="small mut" style="margin-top:18px">Points: spell it right first go = 10, tap the right spelling = 5, 5 in a row = +10 bonus, perfect round = +20. A word earns credit once per day.</p>';
+  app.innerHTML=h;
+}
+function renderSummary(){
+  const missed=[...new Set(R.missed)];const perfect=R.first===R.total;
+  app.innerHTML='<div class="hero">'+decor()+mascot('cheer',120)+'<h1 class="hello">'+(perfect?'Perfect round!':'Round complete!')+'</h1></div>'+
+  '<div class="card pulled pop" style="text-align:center"><div class="bignum">'+R.first+'<span>/'+R.total+'</span></div><div class="mut">right first time</div>'+
+  '<p class="earn">⭐ +'+R.earned+' points'+(R.bonus?' (includes +'+R.bonus+' perfect bonus)':'')+'</p><p class="mut">You now have <b>'+minsOf(S.pts)+' min</b> of device time.</p>'+
+  (missed.length?'<div class="card" style="background:#FFF1CF;box-shadow:none"><h3>Words to practise</h3><p>'+missed.map(esc).join(', ')+'</p></div>':'')+
+  '<div class="row" style="justify-content:center"><button class="btn" data-act="again">Play again</button><button class="btn ghost" data-act="home">Home</button></div></div>';
+  setTimeout(()=>confetti(perfect?90:(R.first/R.total>=.7?45:0)),200);
+}
+function renderClaim(){
+  const mins=usable();const opts=[5,10,15,20,30].filter(m=>m<=mins&&m>=S.cfg.minClaim);
+  if(mins>=S.cfg.minClaim&&opts.indexOf(mins)<0)opts.push(mins);
+  app.innerHTML='<div class="hero mini">'+decor()+mascot('happy',90)+'<h1 class="hello" style="font-size:1.6rem">Use your device time</h1></div>'+
+  '<div class="card pulled"><p>You can use up to <b>'+mins+' minutes</b> now. Choose how many to use now. The countdown starts straight away, so be ready!</p>'+
+  '<div class="row" style="margin:14px 0">'+opts.map(m=>'<button class="btn gold" data-act="useit" data-m="'+m+'">'+m+' min</button>').join('')+'</div>'+
+  '<p class="small mut">If you finish early, press Stop and the whole minutes you did not use come back to you.</p><button class="btn ghost" data-act="home">Back</button></div>';
+}
+function startClaim(m){
+  const go_=()=>{S.pts-=m*S.cfg.ppm;rollDay();S.day.used=(S.day.used||0)+m;S.claim={start:Date.now(),end:Date.now()+m*60000,mins:m};log('claim',-m*S.cfg.ppm,'Started '+m+' min of device time');save();view='timer';render()};
+  if(S.cfg.approve)pinGate(go_,'Parent approval needed');else go_();
+}
+function fmtLeft(ms){ms=Math.max(0,ms);const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function renderTimer(){
+  if(!S.claim){view='home';return render()}
+  app.innerHTML='<div class="hero blue">'+decor()+'<div style="font-weight:900;opacity:.9">Device time is running</div><div id="tm" class="timer">'+fmtLeft(S.claim.end-Date.now())+'</div><div class="bar" style="margin:10px auto 16px;max-width:380px"><i id="tb" style="width:100%"></i></div>'+mascot('happy',90)+'</div>'+
+  '<div class="card pulled" style="text-align:center"><p class="mut">You chose '+S.claim.mins+' minutes. When the timer ends, the device goes down.</p><button class="btn red" data-act="stopearly">Stop early</button></div>';
+  tickId=setInterval(tick,500);tick();
+}
+function tick(){
+  if(!S.claim)return;
+  const left=S.claim.end-Date.now();
+  if(left<=0){endClaim(false);return}
+  const t=$('#tm'),b=$('#tb');
+  if(t){t.textContent=fmtLeft(left);t.className='timer'+(left<60000?' low':'')}
+  if(b)b.style.width=Math.round(left/(S.claim.mins*60000)*100)+'%';
+}
+function endClaim(early){
+  if(!S.claim)return;
+  const c=S.claim;S.claim=null;
+  if(early){
+    const unused=Math.min(c.mins,Math.floor((c.end-Date.now()+15000)/60000));
+    if(unused>0){S.pts+=unused*S.cfg.ppm;rollDay();S.day.used=Math.max(0,(S.day.used||0)-unused);log('refund',unused*S.cfg.ppm,'Stopped early, '+unused+' min returned')}
+    else log('claim',0,'Device time finished early');
+    save();clearInterval(tickId);view='home';render();return;
+  }
+  log('claim',0,'Device time ended ('+c.mins+' min)');save();sfx.cheer();clearInterval(tickId);view='timesup';render();
+}
+function renderTimesUp(){
+  app.innerHTML='<div class="hero orange">'+decor()+mascot('cheer',120)+'<h1 class="hello">Time is up!</h1><div class="sub">Great job using your time well</div></div>'+
+  '<div class="card pulled" style="text-align:center"><p class="mut">Please put the device down, or earn more minutes with another round.</p><button class="btn big" data-act="home">Back to SpellQuest</button></div>';
+  setTimeout(()=>confetti(40),200);
+}
+
+/* ---------- REPORTS ---------- */
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const wordsFor=X=>BASE.concat(parseCustom(X.custom));
+const statX=(X,w)=>(X.words||{})[wkey(w)]||{box:0,right:0,wrong:0,seen:0,last:0};
+const masteredCount=X=>wordsFor(X).filter(w=>statX(X,w.w).box>=3).length;
+function logRound(done){
+  if(!R||R.logged||!R.tried)return;R.logged=true;
+  S.rounds=S.rounds||[];S.snap=S.snap||{};
+  S.rounds.push({t:Date.now(),id:R.id,name:R.name,tried:R.tried,first:R.first,pts:R.earned,secs:Math.min(1800,Math.round((Date.now()-R.t0)/1000)),missed:[...new Set(R.missed)],done:!!done});
+  if(S.rounds.length>500)S.rounds.splice(0,S.rounds.length-500);
+  S.snap[dstr()]=masteredCount(S);save();
+}
+const dayStart=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+function bounds(days){const end=Date.now();return{start:days?dayStart(end)-(days-1)*864e5:0,end:end}}
+const roundsIn=(X,a,b)=>(X.rounds||[]).filter(r=>r.t>=a&&r.t<b);
+function agg(rs){let tried=0,first=0,pts=0,secs=0;const d={};rs.forEach(r=>{tried+=r.tried;first+=r.first;pts+=r.pts;secs+=r.secs;d[dstr(new Date(r.t))]=1});return{n:rs.length,tried:tried,first:first,pts:pts,secs:secs,days:Object.keys(d).length,acc:tried?Math.round(first/tried*100):null}}
+function usedMins(X,a,b){let u=0;(X.ledger||[]).forEach(e=>{if(e.t>=a&&e.t<b){if(e.k==='claim'&&e.pts<0)u+=-e.pts;else if(e.k==='refund')u-=e.pts}});return Math.max(0,Math.round(u/X.cfg.ppm))}
+function dayArr(X,days){
+  const n=days||30,arr=[];
+  for(let i=n-1;i>=0;i--){const d=new Date(Date.now()-i*864e5);arr.push({k:dstr(d),wd:WD[d.getDay()],dn:d.getDate(),tried:0,first:0,m:0})}
+  (X.rounds||[]).forEach(r=>{const a=arr.find(x=>x.k===dstr(new Date(r.t)));if(a){a.tried+=r.tried;a.first+=r.first}});
+  const keys=Object.keys(X.snap||{}).sort();let last=0;
+  const before=keys.filter(k=>k<arr[0].k);if(before.length)last=X.snap[before[before.length-1]];
+  arr.forEach(a=>{if(X.snap&&X.snap[a.k]!=null)last=X.snap[a.k];a.m=last});
+  return arr;
+}
+function chart(arr,val,max,col,fmt){
+  const every=arr.length>10?5:1;
+  return '<div class="days">'+arr.map((a,i)=>{const v=val(a);const show=(i%every===0||i===arr.length-1);
+    return '<div style="min-width:0"><span class="small mut" style="font-size:.7rem">'+(v&&(arr.length<=10||show)?fmt(v):'&nbsp;')+'</span><i style="height:'+Math.round(Math.min(1,v/Math.max(1,max))*80)+'px;background:'+col+'"></i><span style="font-size:.65rem" class="mut">'+(arr.length<=10?a.wd:(show?a.dn:'&nbsp;'))+'</span></div>'}).join('')+'</div>';
+}
+const fmtDur=s=>s<90?Math.max(0,s)+' sec':Math.round(s/60)+' min';
+function wordRowsHard(X){return wordsFor(X).map(w=>({w:w.w,s:statX(X,w.w)})).filter(x=>x.s.wrong>0).sort((a,b)=>b.s.wrong-a.s.wrong||a.s.box-b.s.box).slice(0,12)}
+function levelRows(X){
+  const ids=LEVELS.map(l=>[l.id,l.name,l.sub]).concat(parseCustom(X.custom).length?[['custom','My List','']]:[]);
+  return ids.map(x=>{const ws=wordsFor(X).filter(w=>w.lvl===x[0]);const m=ws.filter(w=>statX(X,w.w).box>=3).length;const seen=ws.filter(w=>statX(X,w.w).seen>0).length;return{id:x[0],name:x[1],sub:x[2],total:ws.length,m:m,seen:seen}});
+}
+function insight(X,cur,prev,days){
+  const nm=esc(X.name||'He');
+  if(!cur.n)return 'No rounds played in this period yet.';
+  let t=nm+' practised on '+cur.days+' day'+(cur.days===1?'':'s')+' across '+cur.n+' round'+(cur.n===1?'':'s')+', about '+fmtDur(cur.secs)+' in total. ';
+  if(prev&&prev.acc!=null&&cur.acc!=null){const d=cur.acc-prev.acc;t+='First-try accuracy is '+cur.acc+'%, '+(d>0?'up '+d+' points on':d<0?'down '+(-d)+' points from':'level with')+' the previous '+days+' days ('+prev.acc+'%).'}
+  else if(cur.acc!=null)t+='First-try accuracy is '+cur.acc+'%.';
+  return t;
+}
+function renderReports(X){
+  const days=P.range,ppm=X.cfg.ppm,b=bounds(days);
+  const cur=agg(roundsIn(X,b.start,b.end+1)),prev=days?agg(roundsIn(X,b.start-days*864e5,b.start)):null;
+  const used=usedMins(X,b.start,b.end+1),arr=dayArr(X,days);
+  const mx=Math.max(1,...arr.map(a=>a.tried));
+  let h='';
+  if(P.ext)h+='<div class="warn">👀 Viewing a saved copy of <b>'+esc(X.name||'player')+'</b>\'s progress (not this device). <button class="btn ghost sm" data-act="clearext" style="margin-left:6px">Back to this device</button></div>';
+  h+='<div class="row" style="margin:6px 0">'+[[7,'7 days'],[30,'30 days'],[0,'All time']].map(x=>'<button class="tab'+(days===x[0]?' on':'')+'" data-act="range" data-r="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
+  h+='<div class="card" style="background:#FFF1CF;box-shadow:none"><p style="margin:0">'+insight(X,cur,prev,days)+'</p></div>';
+  h+='<div class="tiles"><div class="tile"><b>'+cur.n+'</b>rounds</div><div class="tile"><b>'+cur.tried+'</b>words attempted</div><div class="tile"><b>'+(cur.acc==null?'n/a':cur.acc+'%')+'</b>right first time</div><div class="tile"><b>'+fmtDur(cur.secs).replace(' ','<small> ')+'</small></b>practising</div><div class="tile"><b>'+Math.floor(cur.pts/ppm)+'</b>min earned</div><div class="tile"><b>'+used+'</b>min used</div></div>';
+  h+='<div class="card"><h3>Words attempted per day</h3>'+chart(arr,a=>a.tried,mx,'var(--blue)',v=>v)+'</div>';
+  h+='<div class="card"><h3>First-try accuracy</h3>'+chart(arr,a=>a.tried?Math.round(a.first/a.tried*100):0,100,'var(--green)',v=>v+'%')+'</div>';
+  const mm=Math.max(1,...arr.map(a=>a.m));
+  h+='<div class="card"><h3>Words mastered over time</h3><p class="small mut" style="margin:2px 0 6px">A word counts as mastered after being spelled right first time on several different occasions.</p>'+chart(arr,a=>a.m,mm,'var(--purple)',v=>v)+'</div>';
+  h+='<div class="card"><h3>Progress by level</h3>'+levelRows(X).map(l=>{const c=LCOL[l.id];return '<div style="margin:12px 0"><div class="row sp"><b>'+esc(l.name)+'</b><span class="small mut">'+esc(l.sub)+'</span></div><div class="bar" style="--ac:'+c[1]+';margin:5px 0 3px"><i style="width:'+Math.round(l.m/l.total*100)+'%"></i></div><div class="small mut">'+l.m+' of '+l.total+' mastered, '+l.seen+' tried</div></div>'}).join('')+'</div>';
+  const hard=wordRowsHard(X);
+  h+='<div class="card"><h3>Words to practise</h3>'+(hard.length?'<table><tr><th>Word</th><th>Tried</th><th>Missed</th><th></th></tr>'+hard.map(x=>'<tr><td><b>'+esc(x.w)+'</b></td><td>'+x.s.seen+'</td><td>'+x.s.wrong+'</td><td>'+(x.s.box>=3?'✅ now solid':x.s.box>=1?'🟡 improving':'🔴 needs work')+'</td></tr>').join('')+'</table>':'<p class="mut">No missed words yet.</p>')+
+    (function(){const m=wordsFor(X).filter(w=>statX(X,w.w).box>=3).map(w=>w.w);return m.length?'<details style="margin-top:10px"><summary class="mut" style="cursor:pointer">Mastered words ('+m.length+')</summary><p class="small">'+m.map(esc).join(', ')+'</p></details>':''})()+'</div>';
+  const rs=(X.rounds||[]).slice(-12).reverse();
+  h+='<div class="card"><h3>Recent rounds</h3>'+(rs.length?'<table><tr><th>When</th><th>Quest</th><th>Score</th><th>Pts</th></tr>'+rs.map(r=>'<tr><td>'+fmtT(r.t)+'</td><td>'+esc(r.name)+(r.done?'':' <span class="mut">(quit)</span>')+'</td><td>'+r.first+'/'+r.tried+'</td><td>'+r.pts+'</td></tr>'+(r.missed.length?'<tr><td colspan="4" class="small mut" style="border-bottom:1px solid var(--line)">Missed: '+r.missed.slice(0,8).map(esc).join(', ')+'</td></tr>':'')).join('')+'</table>':'<p class="mut">No rounds yet.</p>')+'</div>';
+  h+='<div class="card"><h3>Share this report</h3><p class="small mut">Copy a plain-text summary for the selected period to send in a message or email.</p><textarea id="rep" readonly style="min-height:200px">'+esc(reportText(X,days))+'</textarea><div class="row" style="margin-top:8px"><button class="btn" data-act="copyrep">Copy report</button><span id="repmsg" class="small mut"></span></div></div>';
+  if(!P.ext)h+='<div class="card"><h3>Check progress from another device</h3><p class="small mut">His progress is saved on his device. To see it on yours: on his device open Parent area, Backup, tap Copy, send it to yourself, then paste it here. Nothing is changed or saved on your device.</p><textarea id="ex" placeholder="Paste his backup here" style="min-height:90px"></textarea><div id="exmsg" class="small" style="margin:6px 0;min-height:18px"></div><button class="btn gold" data-act="loadext">View his progress</button></div>';
+  return h;
+}
+function reportText(X,days){
+  const b=bounds(days),cur=agg(roundsIn(X,b.start,b.end+1)),prev=days?agg(roundsIn(X,b.start-days*864e5,b.start)):null,ppm=X.cfg.ppm;
+  const L=[];
+  L.push('SpellQuest progress report for '+(X.name||'player'));
+  L.push((days?'Last '+days+' days':'All time')+', to '+new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}));
+  L.push('');
+  L.push('Rounds played: '+cur.n+' (active on '+cur.days+' day'+(cur.days===1?'':'s')+')');
+  L.push('Words attempted: '+cur.tried+', right first time: '+cur.first+(cur.acc!=null?' ('+cur.acc+'%)':''));
+  if(prev&&prev.acc!=null&&cur.acc!=null)L.push('Accuracy in the previous '+days+' days: '+prev.acc+'%');
+  L.push('Time practising: about '+fmtDur(cur.secs));
+  L.push('Device time earned: '+Math.floor(cur.pts/ppm)+' min, used: '+usedMins(X,b.start,b.end+1)+' min, banked now: '+Math.floor((X.pts||0)/ppm)+' min');
+  L.push('');L.push('Words mastered by level:');
+  levelRows(X).forEach(l=>L.push('- '+l.name+(l.sub?' ('+l.sub+')':'')+': '+l.m+' of '+l.total));
+  L.push('');
+  const hard=wordRowsHard(X).filter(x=>x.s.box<3).slice(0,10);
+  L.push('Words to practise: '+(hard.length?hard.map(x=>x.w+' (missed '+x.s.wrong+')').join(', '):'none right now'));
+  return L.join('\n');
+}
+
+/* ---------- PARENT ---------- */
+function modal(html){const m=document.createElement('div');m.className='modal';m.innerHTML='<div class="card">'+html+'</div>';document.body.appendChild(m);return m}
+function ask(msg,yes,label){
+  const m=modal('<p>'+esc(msg)+'</p><div class="row"><button class="btn ghost" data-c>Cancel</button><button class="btn red" data-y>'+(label||'Yes')+'</button></div>');
+  m.querySelector('[data-c]').onclick=()=>m.remove();m.querySelector('[data-y]').onclick=()=>{m.remove();yes()};
+}
+function pinGate(ok,title){
+  const m=modal('<h2>🔒 '+esc(title||'Parent area')+'</h2><input id="pg" type="password" inputmode="numeric" placeholder="Parent PIN" autocomplete="off" style="margin:12px 0"><div id="pge" class="small" style="color:var(--red);min-height:20px"></div><div class="row"><button class="btn ghost" data-c>Cancel</button><button class="btn gold" data-y>Enter</button></div>');
+  const inp=m.querySelector('#pg');inp.focus();
+  const go_=()=>{if(inp.value===S.pin){m.remove();ok()}else{m.querySelector('#pge').textContent='That is not the right PIN.';inp.value=''}};
+  m.querySelector('[data-c]').onclick=()=>m.remove();m.querySelector('[data-y]').onclick=go_;
+  inp.onkeydown=e=>{if(e.key==='Enter')go_()};
+}
+function renderParent(){
+  const tabs=[['reports','Reports'],['overview','Overview'],['settings','Settings'],['words','Words'],['adjust','Adjust'],['backup','Backup']];
+  let h=banner()+'<div class="row sp"><h1>Parent area</h1><button class="btn gold sm" data-act="home">Done</button></div><div class="tabs">'+tabs.map(t=>'<button class="tab'+(P.tab===t[0]?' on':'')+'" data-act="tab" data-t="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
+  const ws=allWords();
+  if(P.tab==='reports'){h+=renderReports(P.ext||S)}else if(P.tab==='overview'){
+    let seen=0,mastered=0,right=0,wrong=0;ws.forEach(w=>{const s=stat(w.w);if(s.seen)seen++;if(s.box>=3)mastered++;right+=s.right;wrong+=s.wrong});
+    const acc=right+wrong?Math.round(right/(right+wrong)*100)+'%':'n/a';
+    const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);days.push({k:dstr(d),l:d.toLocaleDateString('en-AU',{weekday:'short'}),p:0})}
+    S.ledger.forEach(e=>{if(e.k==='earn'&&e.pts>0){const k=dstr(new Date(e.t));const d=days.find(x=>x.k===k);if(d)d.p+=e.pts}});
+    const mx=Math.max(1,...days.map(d=>d.p));
+    const hard=ws.filter(w=>stat(w.w).wrong>0).sort((a,b)=>stat(b.w).wrong-stat(a.w).wrong).slice(0,8);
+    h+='<div class="tiles"><div class="tile"><b>'+minsOf(S.pts)+'</b>min banked</div><div class="tile"><b>'+Math.floor(S.day.earned/S.cfg.ppm)+'</b>min earned today</div><div class="tile"><b>'+mastered+'/'+ws.length+'</b>words mastered</div><div class="tile"><b>'+acc+'</b>first-try accuracy</div><div class="tile"><b>'+streakNow()+'</b>day streak</div></div>'+
+    '<div class="card"><h3>Minutes earned, last 7 days</h3><div class="days" style="margin-top:10px">'+days.map(d=>'<div><span class="small mut">'+Math.floor(d.p/S.cfg.ppm)+'</span><i style="height:'+Math.round(d.p/mx*80)+'px"></i>'+d.l+'</div>').join('')+'</div></div>'+
+    '<div class="card"><h3>Trickiest words</h3><p>'+(hard.length?hard.map(w=>esc(w.w)+' <span class="mut">('+stat(w.w).wrong+')</span>').join(', '):'<span class="mut">None yet.</span>')+'</p></div>'+
+    '<div class="card"><h3>Recent activity</h3><table>'+(S.ledger.slice(-15).reverse().map(e=>'<tr><td>'+fmtT(e.t)+'</td><td>'+esc(e.note)+'</td><td>'+(e.pts?(e.pts>0?'+':'')+e.pts+' pts':'')+'</td></tr>').join('')||'<tr><td class="mut">Nothing yet.</td></tr>')+'</table></div>';
+  }else if(P.tab==='settings'){
+    const c=S.cfg;
+    h+='<div class="card"><label>Player name</label><input id="c_name" type="text" value="'+esc(S.name)+'">'+
+    '<label>Starting level (the one marked TRY THIS)</label><select id="c_lvl">'+LEVELS.map(l=>'<option value="'+l.id+'"'+(c.startLvl===l.id?' selected':'')+'>'+l.name+' ('+l.sub+')</option>').join('')+'</select>'+
+    '<label>Points needed for 1 minute of device time</label><input id="c_ppm" type="number" min="1" value="'+c.ppm+'">'+
+    '<label>Maximum minutes per day (earned and used)</label><input id="c_cap" type="number" min="1" value="'+c.capMin+'">'+
+    '<label>Words per round</label><input id="c_len" type="number" min="3" max="50" value="'+c.roundLen+'">'+
+    '<label>Minimum minutes before cashing in</label><input id="c_min" type="number" min="1" value="'+c.minClaim+'">'+
+    '<label><input type="checkbox" id="c_app" '+(c.approve?'checked':'')+' style="width:auto;margin-right:8px">Require my PIN each time device time is started</label>'+
+    '<label><input type="checkbox" id="c_sfx" '+(c.sfx?'checked':'')+' style="width:auto;margin-right:8px">Sound effects</label>'+
+    '<label>New PIN (leave blank to keep)</label><input id="c_pin" type="password" inputmode="numeric" placeholder="4 to 8 digits">'+
+    '<div id="cmsg" class="small" style="margin:8px 0;min-height:20px"></div><button class="btn gold" data-act="savecfg">Save settings</button></div>';
+  }else if(P.tab==='words'){
+    h+='<div class="card"><h3>My List: add your own words</h3><p class="small mut">One per line. Add a sentence after a comma if you like, for example:<br><b>necessary, It is necessary to wear a hat.</b><br>The word should appear in the sentence so it can be blanked out. Great for weekly school spelling lists.</p><textarea id="cw" spellcheck="false">'+esc(S.custom)+'</textarea><div id="wmsg" class="small" style="margin:8px 0;min-height:20px">'+parseCustom(S.custom).length+' words saved.</div><button class="btn gold" data-act="savewords">Save list</button></div>';
+  }else if(P.tab==='adjust'){
+    h+='<div class="card"><h3>Adjust balance</h3><p class="small mut">Add bonus minutes, or take some off. Current balance: <b>'+minsOf(S.pts)+' min</b>.</p><label>Minutes (use a minus sign to deduct)</label><input id="a_m" type="number" value="5"><label>Note</label><input id="a_n" type="text" placeholder="e.g. Helped with the dishes"><div id="amsg" class="small" style="margin:8px 0;min-height:20px"></div><button class="btn gold" data-act="adjust">Apply</button></div>';
+  }else{
+    h+='<div class="card"><h3>Backup</h3><p class="small mut">Copy this to keep progress safe or move it to another device.</p><textarea id="bk" readonly>'+esc(JSON.stringify(S))+'</textarea><div class="row" style="margin-top:8px"><button class="btn" data-act="copybk">Copy</button></div></div>'+
+    '<div class="card"><h3>Restore</h3><textarea id="rs" placeholder="Paste a backup here"></textarea><div id="rmsg" class="small" style="margin:8px 0;min-height:20px"></div><button class="btn gold" data-act="restore">Restore</button></div>'+
+    '<div class="card"><h3>Reset</h3><p class="small mut">Reset progress clears points, balance, word history and reports. Your settings and PIN are kept.</p><button class="btn red" data-act="reset">Reset progress</button><p class="small mut" style="margin-top:16px">Full reset also clears the name, settings, My List and PIN, and returns to the welcome screen.</p><button class="btn red" data-act="fullreset">Full reset</button></div>';
+  }
+  app.innerHTML=h;
+}
+const num=(id,d)=>{const v=parseInt($(id).value,10);return isNaN(v)||v<1?d:v};
+
+/* ---------- ACTIONS ---------- */
+const acts={
+  setup(){
+    const n=$('#s_name').value.trim(),p=$('#s_pin').value.trim();
+    if(!n){$('#err').textContent='Please enter a name.';return}
+    if(!/^\d{4,8}$/.test(p)){$('#err').textContent='PIN must be 4 to 8 digits.';return}
+    S.name=n;S.pin=p;S.setup=true;save();view='home';render();
+  },
+  start(d){startRound(d.id)},
+  again(){startRound(R.id)},
+  home(){view='home';render()},
+  quit(){ask('Quit this round? Points you earned so far are kept.',()=>{if(R&&R.entry&&R.entry.pts<=0){const i=S.ledger.indexOf(R.entry);if(i>=0)S.ledger.splice(i,1)}logRound(false);save();view='home';render()},'Quit')},
+  sayw(){speak(cur().w)},
+  says(){speak(cur().s)},
+  sayslow(){speak(cur().w,.55)},
+  hint(){R.hint=true;showHint();const a=$('#ans');if(a)a.focus()},
+  check(){
+    if(R.phase!=='ask')return;
+    const v=$('#ans').value.trim();if(!v)return;
+    R.phase='lock';resolve(v.toLowerCase()===cur().w.toLowerCase(),v);
+  },
+  fixcheck(){
+    const f=$('#fix');if(!f)return;
+    if(f.value.trim().toLowerCase()===cur().w.toLowerCase()){sfx.good();R.phase='done';
+      $('#fb').innerHTML='<div class="fb good pop"><div style="font-size:1.4rem;font-weight:900">✅ Locked in: '+esc(cur().w)+'</div></div><button class="btn big" style="margin-top:12px" data-act="next">Next ➜</button>';
+      const nb=document.querySelector('[data-act=next]');if(nb)nb.focus();
+    }else{sfx.bad();f.value='';f.placeholder='Look at the word above and try again'}
+  },
+  pick(d,btn){
+    if(R.phase!=='ask')return;R.phase='lock';
+    const q=cur(),ok=d.v===q.w;
+    document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.v===q.w)b.classList.add('good');else if(b===btn)b.classList.add('bad')});
+    resolve(ok,d.v);
+  },
+  next(){next()},
+  claim(){view='claim';render()},
+  useit(d){startClaim(parseInt(d.m,10))},
+  stopearly(){ask('Stop now? Whole minutes you have not used will be returned.',()=>endClaim(true),'Stop')},
+  parent(){pinGate(()=>{P.tab='reports';view='parent';render()})},
+  tab(d){P.tab=d.t;renderParent()},
+  savecfg(){
+    const m=$('#cmsg');const pin=$('#c_pin').value.trim();
+    if(pin&&!/^\d{4,8}$/.test(pin)){m.style.color='var(--red)';m.textContent='PIN must be 4 to 8 digits.';return}
+    S.name=$('#c_name').value.trim()||S.name;
+    S.cfg.startLvl=$('#c_lvl').value;S.cfg.ppm=num('#c_ppm',20);S.cfg.capMin=num('#c_cap',30);S.cfg.roundLen=Math.min(50,Math.max(3,num('#c_len',20)));S.cfg.minClaim=num('#c_min',5);
+    S.cfg.approve=$('#c_app').checked;S.cfg.sfx=$('#c_sfx').checked;if(pin)S.pin=pin;
+    save();m.style.color='var(--green)';m.textContent='Saved.';
+  },
+  savewords(){S.custom=$('#cw').value;save();$('#wmsg').textContent=parseCustom(S.custom).length+' words saved.'},
+  adjust(){
+    const v=parseInt($('#a_m').value,10),m=$('#amsg');
+    if(isNaN(v)||v===0){m.style.color='var(--red)';m.textContent='Enter a number of minutes.';return}
+    const p=Math.max(-S.pts,v*S.cfg.ppm);S.pts+=p;log('adjust',p,'Parent: '+($('#a_n').value.trim()||(v>0?'bonus':'deduction'))+' ('+v+' min)');save();
+    m.style.color='var(--green)';m.textContent='Done. Balance is now '+minsOf(S.pts)+' min.';
+  },
+  copybk(){const t=$('#bk');t.select();try{navigator.clipboard.writeText(t.value)}catch(e){try{document.execCommand('copy')}catch(e2){}}},
+  restore(){
+    const m=$('#rmsg');
+    try{const o=JSON.parse($('#rs').value);if(!o||!o.cfg||!o.words)throw 0;const d=def();S=Object.assign(d,o,{cfg:Object.assign(d.cfg,o.cfg)});save();m.style.color='var(--green)';m.textContent='Restored.'}
+    catch(e){m.style.color='var(--red)';m.textContent='That does not look like a valid backup.'}
+  },
+  range(d){P.range=parseInt(d.r,10);renderParent()},
+  copyrep(){const t=$('#rep');t.select();let ok=false;try{navigator.clipboard.writeText(t.value);ok=true}catch(e){try{ok=document.execCommand('copy')}catch(e2){}}const m=$('#repmsg');if(m)m.textContent=ok?'Copied!':'Select the text above and copy it.'},
+  loadext(){
+    const m=$('#exmsg');
+    try{const o=JSON.parse($('#ex').value);if(!o||!o.cfg||!o.words)throw 0;const d=def();P.ext=Object.assign(d,o,{cfg:Object.assign(d.cfg,o.cfg)});renderParent()}
+    catch(e){m.style.color='var(--red)';m.textContent='That does not look like a valid backup.'}
+  },
+  clearext(){P.ext=null;renderParent()},
+  fullreset(){ask('Erase everything, including settings and the PIN, and start again?',()=>{S=def();save();P={tab:'reports',range:7,ext:null};R=null;view='home';render()},'Erase all')},
+  reset(){ask('Clear all progress and history?',()=>{S.pts=0;S.words={};S.ledger=[];S.rounds=[];S.snap={};S.day={date:'',earned:0,credited:{}};S.streak=0;S.lastActive='';S.claim=null;save();renderParent()},'Clear')}
+};
+app.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=acts[b.dataset.act];if(f)f(b.dataset,b)});
+app.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(e.target.id==='ans')acts.check();
+  else if(e.target.id==='fix')acts.fixcheck();
+  else if(e.target.id==='s_pin'||e.target.id==='s_name')acts.setup();
+  else if(R&&R.phase==='done'&&view==='round'){const nb=document.querySelector('[data-act=next]');if(nb)next()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&view==='round'&&R&&R.phase==='done'&&document.activeElement===document.body){const nb=document.querySelector('[data-act=next]');if(nb)next()}});
+
+/* ---------- BOOT ---------- */
+rollDay();
+if(S.claim&&S.claim.end<=Date.now()){const c=S.claim;S.claim=null;log('claim',0,'Device time ended ('+c.mins+' min)');save()}
+if(window.__SQ_TEST__)window.__SQ={S:()=>S,acts:acts,R:()=>R,misspell:misspell,BASE:BASE,go:go};
+render();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js')['catch'](function(){})}catch(e){}});
+}
+</script>
+</body>
+</html>
